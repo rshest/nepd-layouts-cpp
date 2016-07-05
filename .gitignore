@@ -1,0 +1,7 @@
+build/
+/.vs/pentofarm/v14/*.suo
+/*.opendb
+/*.db
+/out
+/.vs/polyfarm/v14/*.suo
+.suo
