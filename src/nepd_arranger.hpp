@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <unordered_map>
+#include <algorithm>
 
 
 //  "Non Equal Pairwise Distance" grid arranger
@@ -84,10 +85,74 @@ public:
         }
     }
 
-    //  finds all the layouts of size N that conform 
-    //  to the "Non Equal Pairwise Distance" invariant
-    void find_conforming_layouts(std::vector<layout>& layouts) {
+    //  returns true if all of the cells have unique distances to the pivot cell
+    inline bool unique_dist(int pivot, int* cells, int ncells) const {
+        if (ncells <= 1) return true;
+        std::vector<char> mask(N2_*2, 0);
+        for (int i = 0; i < ncells; i++) {
+            int d2 = dist2(pivot, cells[i]);
+            if (mask[d2] != 0) return false;
+            mask[d2] = 1;
+        }
+        return true;
+    }
 
+    //  finds all the layouts of size N that conform 
+    //  to the "Non Equal Pairwise Distance" invariant (not accounting rotated/mirrored ones)
+    void find_conforming_layouts(std::vector<layout>& res) {
+        layout cur_layout;
+        cur_layout.N = N_;
+        
+        auto& cf = cur_layout.filled_idx;
+        cf.resize(N_);
+
+        typedef std::vector<char> cvec;
+        std::vector<cvec> mask_stack(N_, cvec(N2_, 0));
+
+        int depth = 0;
+        int idx = 0;
+        while (idx < N2_ - N_ || depth > 1) {
+            if (idx == N2_) {
+                //  dead end, invalid placement, go level up
+                depth--;
+                idx = cf[depth - 1] + 1;
+            } else {
+                //  go level down
+                cf[depth] = idx;
+                cvec& mask = mask_stack[depth];
+                if (depth > 0) {
+                    //  update the mask
+                    cvec& prev_mask = mask_stack[depth - 1];
+                    prev_mask[idx] = 1;
+                
+                    if (depth < N_ - 1) {
+                        const int prev_idx = cf[depth - 1];
+                        const int d2 = dist2(prev_idx, idx);
+                
+                        std::copy(prev_mask.begin(), prev_mask.end(), mask.begin());
+                        for (int i = 0; i <= depth; i++) mask_with_distance(cf[i], d2, mask);
+                    }
+                }
+                
+                depth++;
+            }
+
+            if (depth == N_) {
+                //  all of the cells have been placed
+                if (idx < N2_ &&
+                    std::find(res.begin(), res.end(), cur_layout) == res.end()) 
+                {
+                    //  found a new layout
+                    res.push_back(cur_layout);
+                }
+                idx = N2_;
+            } else {
+                //  find the next cell that does not violate the invariant
+                idx++;
+                const cvec& mask = mask_stack[depth - 1];
+                while (idx < N2_ && (mask[idx] || !unique_dist(idx, &cf[0], depth))) idx++;
+            }
+        }
     }
 
 private:
@@ -95,8 +160,7 @@ private:
         std::unordered_multimap<int, int> dist_to_cell;
     };
 
-    const int N_;
-    const int N2_;
+    const int N_, N2_;
     std::vector<dist_table_entry> dist_table_;
 
     void build_dist_table() {

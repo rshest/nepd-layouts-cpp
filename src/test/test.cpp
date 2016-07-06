@@ -71,32 +71,40 @@ public:
         Assert::IsFalse(t == layout{3, {2, 5, 6}});
     }
 
-    //TEST_METHOD(test_find_layouts) {
-    //    {
-    //        nepd_arranger arr(3);
-    //        std::vector<nepd_arranger::layout> layouts;
-    //        arr.find_conforming_layouts(layouts);
-    //        Assert::AreEqual((int)layouts.size(), 5);
-    //    }
-    //    {
-    //        nepd_arranger arr(4);
-    //        std::vector<nepd_arranger::layout> layouts;
-    //        arr.find_conforming_layouts(layouts);
-    //        Assert::AreEqual((int)layouts.size(), 16);
-    //    }
-    //    {
-    //        nepd_arranger arr(5);
-    //        std::vector<nepd_arranger::layout> layouts;
-    //        arr.find_conforming_layouts(layouts);
-    //        Assert::AreEqual((int)layouts.size(), 28);
-    //    }
-    //    {
-    //        nepd_arranger arr(6);
-    //        std::vector<nepd_arranger::layout> layouts;
-    //        arr.find_conforming_layouts(layouts);
-    //        Assert::AreEqual((int)layouts.size(), 2);
-    //    }
-    //}
+    TEST_METHOD(test_find_layouts) {
+        {
+            typedef nepd_arranger::layout layout;
+
+            nepd_arranger arr(3);
+            std::vector<layout> lt;
+            arr.find_conforming_layouts(lt);
+            Assert::AreEqual(5, (int)lt.size());
+
+            Assert::IsFalse(std::find(lt.begin(), lt.end(), layout{3, {0, 1, 5}}) == lt.end());
+            Assert::IsFalse(std::find(lt.begin(), lt.end(), layout{3, {0, 1, 6}}) == lt.end());
+            Assert::IsFalse(std::find(lt.begin(), lt.end(), layout{3, {0, 1, 7}}) == lt.end());
+            Assert::IsFalse(std::find(lt.begin(), lt.end(), layout{3, {0, 1, 8}}) == lt.end());
+            Assert::IsFalse(std::find(lt.begin(), lt.end(), layout{3, {0, 4, 5}}) == lt.end());
+        }
+        {
+            nepd_arranger arr(4);
+            std::vector<nepd_arranger::layout> layouts;
+            arr.find_conforming_layouts(layouts);
+            Assert::AreEqual(16, (int)layouts.size());
+        }
+        //{
+        //    nepd_arranger arr(5);
+        //    std::vector<nepd_arranger::layout> layouts;
+        //    arr.find_conforming_layouts(layouts);
+        //    Assert::AreEqual(28, (int)layouts.size());
+        //}
+        //{
+        //    nepd_arranger arr(6);
+        //    std::vector<nepd_arranger::layout> layouts;
+        //    arr.find_conforming_layouts(layouts);
+        //    Assert::AreEqual(2, (int)layouts.size());
+        //}
+    }
 
 };
 
