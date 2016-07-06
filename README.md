@@ -1,8 +1,8 @@
 This is an exhaustive search solver for the problem:
 
-* On a square board NxN find how to place N pieces such that no two pairwise distances between peaces are equal
-* The mirrored/rotated board placements are considered the same
-* Find what is the maximum board side where it's possible to find such a placement
+* On a square board NxN find how to place N pieces such that no two pairwise distances between pieces are equal
+* Mirrored/rotated board placements are considered to be the same
+* Find what is the maximum board side, so that it's possible to find such a placement
 
 An example program output:
 
@@ -47,3 +47,7 @@ Side: 9, Layouts: None.  Time used: 6479ms
 Side: 10, Layouts: None.  Time used: 55238ms
 Side: 11, Layouts: None.  Time used: 426086ms
 ~~~
+
+It's a known result that 7x7 is the maximum board that has such a placement.
+
+Starting from 16x16 it's easy to prove analytically that there is no such a board.
