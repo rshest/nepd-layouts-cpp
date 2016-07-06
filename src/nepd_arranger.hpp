@@ -98,6 +98,7 @@ public:
         const auto& de1 = dist_table_[cell1];
         const auto& de2 = dist_table_[cell2];
         if (de1.equidist_table.empty()) {
+            //  no equi-distance field cache, compute the hard way
             for (const auto& el : de2.dist_to_cell) {
                 idx_t d2 = el.first;
                 auto range = de1.dist_to_cell.equal_range(d2);
@@ -126,7 +127,7 @@ public:
 
     //  finds all the layouts of size N that conform 
     //  to the "Non Equal Pairwise Distance" invariant (not accounting rotated/mirrored ones)
-    void find_conforming_layouts(std::vector<layout>& res) {
+    void find_conforming_layouts(std::vector<layout>& res) const {
         layout cur_layout;
         cur_layout.N = N_;
         
