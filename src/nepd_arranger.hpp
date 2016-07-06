@@ -131,12 +131,17 @@ public:
 
         typedef std::vector<char> cvec;
         std::vector<cvec> mask_stack(N_, cvec(N2_, 0));
+        std::vector<idx_t> distances;
+        distances.reserve(N_*(N_ - 1)/2);
 
         idx_t depth = 0;
         idx_t idx = 0;
         while (idx < N2_ - N_ || depth > 1) {
             if (idx == N2_) {
                 //  dead end, invalid placement, go level up
+                if (depth < N_) {
+                    distances.erase(distances.end() - (depth - 1), distances.end());
+                }
                 depth--;
                 idx = cf[depth - 1] + 1;
             } else {
@@ -152,12 +157,12 @@ public:
                         std::copy(prev_mask.begin(), prev_mask.end(), mask.begin());
 
                         //  mask out all the now-impossible cells
-                        for (idx_t i = 0; i <= depth; i++) {
-                            for (idx_t j = i + 1; j <= depth; j++) {
-                                mask_with_distance(idx, dist2(cf[i], cf[j]), mask);
-                            }
-
+                        for (idx_t d2 : distances) {
+                            mask_with_distance(idx, d2, mask);
+                        }
+                        for (idx_t i = 0; i < depth; i++) {
                             const idx_t d2 = dist2(cf[i], idx);
+                            distances.push_back(d2);
                             for (idx_t j = 0; j <= depth; j++) {
                                 mask_with_distance(cf[j], d2, mask);
                             }
