@@ -141,7 +141,8 @@ public:
 
         idx_t depth = 0;
         idx_t idx = 0;
-        while (idx < N2_ - N_ || depth > 1) {
+        const idx_t NEnd = N2_/2 + 1;
+        while (idx < NEnd || depth > 1) {
             if (idx == N2_) {
                 //  dead end, invalid placement, go level up
                 if (depth < N_) {
