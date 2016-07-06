@@ -36,7 +36,7 @@ public:
         Assert::AreEqual(2, arr.dist2(8, 0));
     }
 
-    TEST_METHOD(test_distance_map) {
+    TEST_METHOD(test_mask_with_distance) {
         nepd_arranger arr(3);
         std::vector<char> mask(3*3, 0);
         arr.mask_with_distance(4, 2, mask);
@@ -46,10 +46,24 @@ public:
         Assert::AreEqual(mask, {0, 1, 0, 1, 0, 0, 1, 0, 1});
     }
 
+    TEST_METHOD(test_mask_equidist) {
+        nepd_arranger arr(3);
+        std::vector<char> mask(3*3, 0);
+        arr.mask_equidist(0, 2, mask);
+        Assert::AreEqual(mask, {0, 0, 0, 0, 1, 0, 0, 1, 0});
+
+        arr.mask_equidist(0, 6, mask);
+        Assert::AreEqual(mask, {0, 0, 0, 0, 1, 0, 0, 1, 0});
+
+        arr.mask_equidist(2, 6, mask);
+        Assert::AreEqual(mask, {0, 0, 0, 0, 1, 0, 0, 1, 1});
+
+    }
+
     TEST_METHOD(test_layout_print) {
         nepd_arranger::layout t = {3, {0, 1, 7}};
         std::stringstream ss;
-        ss << t;
+        t.print(ss);
         Assert::AreEqual(std::string("oo.\n...\n.o.\n"), ss.str());
     }
 
@@ -92,18 +106,18 @@ public:
             arr.find_conforming_layouts(layouts);
             Assert::AreEqual(16, (int)layouts.size());
         }
-        //{
-        //    nepd_arranger arr(5);
-        //    std::vector<nepd_arranger::layout> layouts;
-        //    arr.find_conforming_layouts(layouts);
-        //    Assert::AreEqual(28, (int)layouts.size());
-        //}
-        //{
-        //    nepd_arranger arr(6);
-        //    std::vector<nepd_arranger::layout> layouts;
-        //    arr.find_conforming_layouts(layouts);
-        //    Assert::AreEqual(2, (int)layouts.size());
-        //}
+        {
+            nepd_arranger arr(5);
+            std::vector<nepd_arranger::layout> layouts;
+            arr.find_conforming_layouts(layouts);
+            Assert::AreEqual(28, (int)layouts.size());
+        }
+        {
+            nepd_arranger arr(6);
+            std::vector<nepd_arranger::layout> layouts;
+            arr.find_conforming_layouts(layouts);
+            Assert::AreEqual(2, (int)layouts.size());
+        }
     }
 
 };

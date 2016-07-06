@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 
 
@@ -48,17 +49,20 @@ public:
             return has_eq;
         }
 
-        friend std::ostream& operator <<(std::ostream& os, const layout& t) {
+        //  pretty prints the layout (either whole or a row) to a stream 
+        void print(std::ostream& os, int row = -1) const {
             int k = 0;
-            for (int i = 0; i < t.N; i++) {
-                for (int j = 0; j < t.N; j++) {
-                    bool filled = (k < t.filled_idx.size() && t.filled_idx[k] == j + i*t.N);
+            int start_row = row < 0 ? 0 : row;
+            int end_row = row < 0 ? N - 1 : row;
+            while (k < filled_idx.size() && filled_idx[k] < start_row*N) k++;
+            for (int i = start_row; i <= end_row; i++) {
+                for (int j = 0; j < N; j++) {
+                    bool filled = (k < filled_idx.size() && filled_idx[k] == j + i*N);
                     os << (filled ? "o" : ".");
                     k += filled;
                 }
-                os << "\n";
+                if (row < 0) os << "\n";
             }
-            return os;
         }
     };
 
@@ -85,14 +89,32 @@ public:
         }
     }
 
-    //  returns true if all of the cells have unique distances to the pivot cell
-    inline bool unique_dist(int pivot, int* cells, int ncells) const {
-        if (ncells <= 1) return true;
-        std::vector<char> mask(N2_*2, 0);
-        for (int i = 0; i < ncells; i++) {
-            int d2 = dist2(pivot, cells[i]);
-            if (mask[d2] != 0) return false;
-            mask[d2] = 1;
+
+    //  masks out all the cells with the same distance from cell1 and cell2
+    //  (only cells with higher index than max of the two that are masked out)
+    inline void mask_equidist(int cell1, int cell2, std::vector<char>& mask) const {
+        assert(mask.size() == N2_);
+        const auto& de1 = dist_table_[cell1];
+        const auto& de2 = dist_table_[cell2];
+        for (const auto& el : de1.dist_to_cell) {
+            int d2 = el.first;
+            auto range = de2.dist_to_cell.equal_range(d2);
+            for (auto it = range.first; it != range.second; ++it) {
+                mask[it->second] |= (el.second == it->second);
+            }
+        }
+    }
+
+    //  returns true if layout conforms to the "no equal pairwise distance" invariant
+    inline bool is_valid_layout(const layout& lt) const {
+        if (lt.N != N_) return false;
+        std::unordered_set<int> distances;
+        for (int i = 0; i < N_; i++) {
+            for (int j = i + 1; j < N_; j++) {
+                int d2 = dist2(lt.filled_idx[i], lt.filled_idx[j]);
+                if (distances.find(d2) != distances.end()) return false;
+                distances.insert(d2);
+            }
         }
         return true;
     }
@@ -126,14 +148,24 @@ public:
                     prev_mask[idx] = 1;
                 
                     if (depth < N_ - 1) {
-                        const int prev_idx = cf[depth - 1];
-                        const int d2 = dist2(prev_idx, idx);
-                
                         std::copy(prev_mask.begin(), prev_mask.end(), mask.begin());
-                        for (int i = 0; i <= depth; i++) mask_with_distance(cf[i], d2, mask);
+
+                        //  mask out all the now-impossible cells
+                        for (int i = 0; i <= depth; i++) {
+                            for (int j = i + 1; j <= depth; j++) {
+                                mask_with_distance(idx, dist2(cf[i], cf[j]), mask);
+                            }
+
+                            const int d2 = dist2(cf[i], idx);
+                            for (int j = 0; j <= depth; j++) {
+                                mask_with_distance(cf[j], d2, mask);
+                            }
+                        }
+                        for (int i = 0; i < depth; i++) {
+                            mask_equidist(cf[i], idx, mask);
+                        }
                     }
                 }
-                
                 depth++;
             }
 
@@ -143,6 +175,7 @@ public:
                     std::find(res.begin(), res.end(), cur_layout) == res.end()) 
                 {
                     //  found a new layout
+                    assert(is_valid_layout(cur_layout));
                     res.push_back(cur_layout);
                 }
                 idx = N2_;
@@ -150,7 +183,7 @@ public:
                 //  find the next cell that does not violate the invariant
                 idx++;
                 const cvec& mask = mask_stack[depth - 1];
-                while (idx < N2_ && (mask[idx] || !unique_dist(idx, &cf[0], depth))) idx++;
+                while (idx < N2_ && mask[idx]) idx++;
             }
         }
     }
