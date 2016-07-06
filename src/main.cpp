@@ -4,7 +4,7 @@
 
 #include <nepd_arranger.hpp>
 
-const int MAX_SIDE = 1000;
+const int MAX_SIDE = 16;
 
 int main(int argc, char* argv[]) {
 
