@@ -97,9 +97,9 @@ public:
         assert(mask.size() == N2_);
         const auto& de1 = dist_table_[cell1];
         const auto& de2 = dist_table_[cell2];
-        for (const auto& el : de1.dist_to_cell) {
+        for (const auto& el : de2.dist_to_cell) {
             idx_t d2 = el.first;
-            auto range = de2.dist_to_cell.equal_range(d2);
+            auto range = de1.dist_to_cell.equal_range(d2);
             for (auto it = range.first; it != range.second; ++it) {
                 mask[it->second] |= (el.second == it->second);
             }
