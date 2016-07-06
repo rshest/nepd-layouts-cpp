@@ -97,12 +97,16 @@ public:
         assert(mask.size() == N2_);
         const auto& de1 = dist_table_[cell1];
         const auto& de2 = dist_table_[cell2];
-        for (const auto& el : de2.dist_to_cell) {
-            idx_t d2 = el.first;
-            auto range = de1.dist_to_cell.equal_range(d2);
-            for (auto it = range.first; it != range.second; ++it) {
-                mask[it->second] |= (el.second == it->second);
+        if (de1.equidist_table.empty()) {
+            for (const auto& el : de2.dist_to_cell) {
+                idx_t d2 = el.first;
+                auto range = de1.dist_to_cell.equal_range(d2);
+                for (auto it = range.first; it != range.second; ++it) {
+                    mask[it->second] |= (el.second == it->second);
+                }
             }
+        } else {
+            for (idx_t k: de1.equidist_table[cell2]) mask[k] = 1;
         }
     }
 
@@ -197,6 +201,7 @@ public:
 private:
     struct dist_table_entry {
         std::unordered_multimap<idx_t, idx_t> dist_to_cell;
+        std::vector<std::vector<idx_t>> equidist_table;
     };
 
     const idx_t N_, N2_;
@@ -206,9 +211,17 @@ private:
         dist_table_.resize(N2_);
         for (idx_t i = 0; i < N2_; i++) {
             dist_table_entry& de = dist_table_[i];
+            de.equidist_table.resize(N2_);
+            
             for (idx_t j = i + 1; j < N2_; j++) {
                 idx_t d2 = dist2(i, j);
                 de.dist_to_cell.insert({d2, j});
+
+                for (idx_t k = j + 1; k < N2_; k++) {
+                    idx_t d2i = dist2(k, i);
+                    idx_t d2j = dist2(k, j);
+                    if (d2i == d2j) de.equidist_table[j].push_back(k);
+                }
             }
         }
     }
