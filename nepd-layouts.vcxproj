@@ -22,7 +22,8 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\nepd_arranger.hpp" />
+    <ClInclude Include="src\arranger.hpp" />
+    <ClInclude Include="src\layout.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{95D69762-C493-443C-B749-30A32BE696AB}</ProjectGuid>
