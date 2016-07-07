@@ -38,7 +38,7 @@ void arranger::find_conforming_layouts(std::vector<layout>& res) const {
 
     idx_t depth = 0;
     idx_t idx = 0;
-    const idx_t NEnd = N2_/2 + 1;
+    const idx_t NEnd = N_/2 + 1;
     while (true) {
         if (idx == N2_) {   
             //  dead end, invalid placement, go level up
