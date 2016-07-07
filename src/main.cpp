@@ -2,7 +2,7 @@
 #include <ctime>
 #include <chrono>
 
-#include <nepd_arranger.hpp>
+#include <arranger.hpp>
 
 const int MAX_SIDE = 16;
 
