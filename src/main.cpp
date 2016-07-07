@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
 
     for (int n = 3; n <= max_side; n++) {
         std::cout << "Side: " << n << ", Layouts: ";
-        std::vector<nepd_arranger::layout> layouts;
-        nepd_arranger arr(n);
+        std::vector<nepd::layout> layouts;
+        nepd::arranger arr(n);
         arr.find_conforming_layouts(layouts);
 
         high_resolution_clock::time_point cur_time = high_resolution_clock::now();

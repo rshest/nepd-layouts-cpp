@@ -1,73 +1,75 @@
-#ifndef __NEPD_ARRANGER__
-#define __NEPD_ARRANGER__
+#ifndef __ARRANGER__
+#define __ARRANGER__
 
 #include <cassert>
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
 
+namespace nepd {
+
 typedef int16_t idx_t;
 
+struct layout {
+    idx_t N;
+    std::vector<idx_t> filled_idx;
+
+    //  compares two layouts, considering rotated/mirrored ones equal
+    inline bool operator ==(const layout& rhs) const {
+        if (N != rhs.N || filled_idx.size() != rhs.filled_idx.size()) return false;
+
+        const idx_t N2 = N*N;
+        std::vector<char> mask(N2, 0);
+        std::vector<char> rhs_mask(N2, 0);
+
+        for (idx_t k: filled_idx) mask[k] = 1;
+        for (idx_t k: rhs.filled_idx) rhs_mask[k] = 1;
+
+        const idx_t N1 = N - 1;
+        const idx_t transforms[][6] = {
+            {1, 0, 0, 0, 1, 0}, {0, -1, N1, 1, 0, 0}, {-1, 0, N1, 0, -1, N1}, {0, 1, 0, -1, 0, N1},
+            {-1, 0, N1, 0, 1, 0}, {0, -1, N1, -1, 0, N1}, {1, 0, 0, 0, -1, N1}, {0, 1, 0, 1, 0, 0}};
+
+        bool has_eq = false;
+        for (const auto& tr: transforms) {
+            bool trans_eq = true;
+            for (idx_t i = 0; i < N2; i++) {
+                idx_t x = i%N, y = i/N;
+                idx_t tx = tr[0]*x + tr[1]*y + tr[2];
+                idx_t ty = tr[3]*x + tr[4]*y + tr[5];
+                if (mask[i] != rhs_mask[tx + ty*N]) {
+                    trans_eq = false;
+                    break;
+                }
+            }
+            has_eq |= trans_eq;
+        }
+        return has_eq;
+    }
+
+    //  pretty prints the layout (either whole or a row) to a stream 
+    void print(std::ostream& os, idx_t row = -1) const {
+        idx_t k = 0;
+        idx_t start_row = row < 0 ? 0 : row;
+        idx_t end_row = row < 0 ? N - 1 : row;
+        while (k < filled_idx.size() && filled_idx[k] < start_row*N) k++;
+        for (idx_t i = start_row; i <= end_row; i++) {
+            for (idx_t j = 0; j < N; j++) {
+                bool filled = (k < filled_idx.size() && filled_idx[k] == j + i*N);
+                os << (filled ? "o" : ".");
+                k += filled;
+            }
+            if (row < 0) os << "\n";
+        }
+    }
+};
 //  "Non Equal Pairwise Distance" grid arranger
 //  Finds all the possible ways to place N points into NxN grid cells, so that
 //  every pairwise distance between two points is unique
-class nepd_arranger {
+class arranger {
 public:
-    struct layout {
-        idx_t N;
-        std::vector<idx_t> filled_idx;
 
-        //  compares two layouts, considering rotated/mirrored ones equal
-        inline bool operator ==(const layout& rhs) const {
-            if (N != rhs.N || filled_idx.size() != rhs.filled_idx.size()) return false;
-
-            const idx_t N2 = N*N;
-            std::vector<char> mask(N2, 0);
-            std::vector<char> rhs_mask(N2, 0);
-
-            for (idx_t k: filled_idx) mask[k] = 1;
-            for (idx_t k: rhs.filled_idx) rhs_mask[k] = 1;
-
-            const idx_t N1 = N - 1;
-            const idx_t transforms[][6] = {
-                {1, 0, 0, 0, 1, 0}, {0, -1, N1, 1, 0, 0}, {-1, 0, N1, 0, -1, N1}, {0, 1, 0, -1, 0, N1},
-                {-1, 0, N1, 0, 1, 0}, {0, -1, N1, -1, 0, N1}, {1, 0, 0, 0, -1, N1}, {0, 1, 0, 1, 0, 0}};
-
-            bool has_eq = false;
-            for (const auto& tr: transforms) {
-                bool trans_eq = true;
-                for (idx_t i = 0; i < N2; i++) {
-                    idx_t x = i%N, y = i/N;
-                    idx_t tx = tr[0]*x + tr[1]*y + tr[2];
-                    idx_t ty = tr[3]*x + tr[4]*y + tr[5];
-                    if (mask[i] != rhs_mask[tx + ty*N]) {
-                        trans_eq = false;
-                        break;
-                    }
-                }
-                has_eq |= trans_eq;
-            }
-            return has_eq;
-        }
-
-        //  pretty prints the layout (either whole or a row) to a stream 
-        void print(std::ostream& os, idx_t row = -1) const {
-            idx_t k = 0;
-            idx_t start_row = row < 0 ? 0 : row;
-            idx_t end_row = row < 0 ? N - 1 : row;
-            while (k < filled_idx.size() && filled_idx[k] < start_row*N) k++;
-            for (idx_t i = start_row; i <= end_row; i++) {
-                for (idx_t j = 0; j < N; j++) {
-                    bool filled = (k < filled_idx.size() && filled_idx[k] == j + i*N);
-                    os << (filled ? "o" : ".");
-                    k += filled;
-                }
-                if (row < 0) os << "\n";
-            }
-        }
-    };
-
-    nepd_arranger(idx_t N) : N_(N), N2_(N*N) {
+    arranger(idx_t N) : N_(N), N2_(N*N) {
         build_dist_table();
     }
 
@@ -96,19 +98,7 @@ public:
     inline void mask_equidist(idx_t cell1, idx_t cell2, std::vector<char>& mask) const {
         assert(mask.size() == N2_);
         const auto& de1 = dist_table_[cell1];
-        const auto& de2 = dist_table_[cell2];
-        if (de1.equidist_table.empty()) {
-            //  no equi-distance field cache, compute the hard way
-            for (const auto& el : de2.dist_to_cell) {
-                idx_t d2 = el.first;
-                auto range = de1.dist_to_cell.equal_range(d2);
-                for (auto it = range.first; it != range.second; ++it) {
-                    mask[it->second] |= (el.second == it->second);
-                }
-            }
-        } else {
-            for (idx_t k: de1.equidist_table[cell2]) mask[k] = 1;
-        }
+        for (idx_t k: de1.equidist_table[cell2]) mask[k] = 1;
     }
 
     //  returns true if layout conforms to the "no equal pairwise distance" invariant
@@ -228,6 +218,8 @@ private:
         }
     }
 };
+
+}  // namespace nepd
 
 
 #endif
