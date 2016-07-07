@@ -44,7 +44,7 @@ void layout::print(std::ostream& os, idx_t row) const {
     for (idx_t i = start_row; i <= end_row; i++) {
         for (idx_t j = 0; j < N; j++) {
             bool filled = (k < filled_idx.size() && filled_idx[k] == j + i*N);
-            os << (filled ? "o" : ".");
+            os << (filled ? "O" : ".");
             k += filled;
         }
         if (row < 0) os << "\n";

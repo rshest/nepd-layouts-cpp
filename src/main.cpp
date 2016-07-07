@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
 
         if (layouts.size() > 0) {
             for (int row = 0; row < n; row++) {
+                std::cout << "|";
                 for (const auto& lt: layouts) {
                     lt.print(std::cout, row);
                     std::cout << "|";
