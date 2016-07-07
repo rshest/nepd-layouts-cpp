@@ -6,6 +6,10 @@
 
 namespace nepd {
 
+arranger::arranger(idx_t N) : N_(N), N2_(N*N) {
+    build_dist_table();
+}
+
 bool arranger::is_valid_layout(const layout& lt) const {
     if (lt.N != N_) return false;
     std::unordered_set<idx_t> distances;

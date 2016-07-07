@@ -15,9 +15,7 @@ namespace nepd {
 class arranger {
 public:
 
-    arranger(idx_t N) : N_(N), N2_(N*N) {
-        build_dist_table();
-    }
+    arranger(idx_t N);
 
     //  returns square of the distance between two cell indices
     inline idx_t dist2(idx_t cellA, idx_t cellB) const;
@@ -48,7 +46,6 @@ private:
 
     void build_dist_table();
 };
-
 
 inline idx_t arranger::dist2(idx_t cellA, idx_t cellB) const {
     assert(cellA >= 0 && cellB >= 0 && cellA < N2_ && cellB < N2_);
