@@ -32,47 +32,48 @@ void arranger::find_conforming_layouts(std::vector<layout>& res) const {
     cf.resize(N_);
 
     typedef std::vector<char> cvec;
-    std::vector<cvec> mask_stack(N_, cvec(N2_, 0));
+    std::vector<cvec> mask_stack(N_ + 1, cvec(N2_, 0));
     std::vector<idx_t> distances;
     distances.reserve(N_*(N_ - 1)/2);
 
     idx_t depth = 0;
     idx_t idx = 0;
     const idx_t NEnd = N2_/2 + 1;
-    while (idx < NEnd || depth > 1) {
-        if (idx == N2_) {
+    while (true) {
+        if (idx == N2_) {   
             //  dead end, invalid placement, go level up
             if (depth < N_) {
                 distances.erase(distances.end() - (depth - 1), distances.end());
             }
             depth--;
-            idx = cf[depth - 1] + 1;
+            idx = cf[depth];
+            if (depth == 0 && idx >= NEnd) {
+                //  exhausted all the possibilities
+                break;
+            }
         } else {
             //  go level down
             cf[depth] = idx;
-            cvec& mask = mask_stack[depth];
-            if (depth > 0) {
-                //  update the mask
-                cvec& prev_mask = mask_stack[depth - 1];
-                prev_mask[idx] = 1;
+            cvec& prev_mask = mask_stack[depth];
+            prev_mask[idx] = 1;
                 
-                if (depth < N_ - 1) {
-                    std::copy(prev_mask.begin(), prev_mask.end(), mask.begin());
+            if (depth < N_ - 1) {
+                cvec& mask = mask_stack[depth + 1];
+                std::copy(prev_mask.begin(), prev_mask.end(), mask.begin());
 
-                    //  mask out all the now-impossible cells
-                    for (idx_t d2 : distances) {
-                        mask_with_distance(idx, d2, mask);
+                //  mask out all the now-impossible cells
+                for (idx_t d2 : distances) {
+                    mask_with_distance(idx, d2, mask);
+                }
+                for (idx_t i = 0; i < depth; i++) {
+                    const idx_t d2 = dist2(cf[i], idx);
+                    distances.push_back(d2);
+                    for (idx_t j = 0; j <= depth; j++) {
+                        mask_with_distance(cf[j], d2, mask);
                     }
-                    for (idx_t i = 0; i < depth; i++) {
-                        const idx_t d2 = dist2(cf[i], idx);
-                        distances.push_back(d2);
-                        for (idx_t j = 0; j <= depth; j++) {
-                            mask_with_distance(cf[j], d2, mask);
-                        }
-                    }
-                    for (idx_t i = 0; i < depth; i++) {
-                        mask_equidist(cf[i], idx, mask);
-                    }
+                }
+                for (idx_t i = 0; i < depth; i++) {
+                    mask_equidist(cf[i], idx, mask);
                 }
             }
             depth++;
@@ -91,7 +92,7 @@ void arranger::find_conforming_layouts(std::vector<layout>& res) const {
         } else {
             //  find the next cell that does not violate the invariant
             idx++;
-            const cvec& mask = mask_stack[depth - 1];
+            const cvec& mask = mask_stack[depth];
             while (idx < N2_ && mask[idx]) idx++;
         }
     }

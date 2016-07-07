@@ -4,6 +4,7 @@
 
 #include <arranger.hpp>
 
+const int MIN_SIDE = 3;
 const int MAX_SIDE = 16;
 
 int main(int argc, char* argv[]) {
@@ -14,7 +15,7 @@ int main(int argc, char* argv[]) {
     using namespace std::chrono;
     high_resolution_clock::time_point start_time = high_resolution_clock::now();
 
-    for (int n = 3; n <= max_side; n++) {
+    for (int n = MIN_SIDE; n <= max_side; n++) {
         std::cout << "Side: " << n << ", Layouts: ";
         std::vector<nepd::layout> layouts;
         nepd::arranger arr(n);

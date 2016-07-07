@@ -64,7 +64,7 @@ public:
         nepd::layout t = {3, {0, 1, 7}};
         std::stringstream ss;
         t.print(ss);
-        Assert::AreEqual(std::string("oo.\n...\n.o.\n"), ss.str());
+        Assert::AreEqual(std::string("OO.\n...\n.O.\n"), ss.str());
     }
 
     TEST_METHOD(test_layouts_equal) {
@@ -86,9 +86,16 @@ public:
     }
 
     TEST_METHOD(test_find_layouts) {
-        {
-            typedef nepd::layout layout;
+        typedef nepd::layout layout;
 
+        {
+            nepd::arranger arr(2);
+            std::vector<layout> lt;
+            arr.find_conforming_layouts(lt);
+            Assert::AreEqual(2, (int)lt.size());
+        }
+        
+        {
             nepd::arranger arr(3);
             std::vector<layout> lt;
             arr.find_conforming_layouts(lt);
@@ -102,21 +109,24 @@ public:
         }
         {
             nepd::arranger arr(4);
-            std::vector<nepd::layout> layouts;
-            arr.find_conforming_layouts(layouts);
-            Assert::AreEqual(20, (int)layouts.size());  // NOTE: supposed to be 16?..
+            std::vector<layout> lt;
+            arr.find_conforming_layouts(lt);
+            Assert::AreEqual(23, (int)lt.size()); 
+
+            Assert::IsFalse(std::find(lt.begin(), lt.end(), layout{4, {0, 1, 6, 12}}) == lt.end());
+            Assert::IsFalse(std::find(lt.begin(), lt.end(), layout{4, {1, 2, 7, 13}}) == lt.end());
         }
         {
             nepd::arranger arr(5);
-            std::vector<nepd::layout> layouts;
-            arr.find_conforming_layouts(layouts);
-            Assert::AreEqual(32, (int)layouts.size());  // NOTE: supposed to be 28?..
+            std::vector<layout> lt;
+            arr.find_conforming_layouts(lt);
+            Assert::AreEqual(35, (int)lt.size()); 
         }
         {
             nepd::arranger arr(6);
-            std::vector<nepd::layout> layouts;
-            arr.find_conforming_layouts(layouts);
-            Assert::AreEqual(2, (int)layouts.size());
+            std::vector<layout> lt;
+            arr.find_conforming_layouts(lt);
+            Assert::AreEqual(2, (int)lt.size());
         }
     }
 
